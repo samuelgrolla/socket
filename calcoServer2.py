@@ -1,41 +1,44 @@
 import socket
 from threading import Thread
-
+import json
 
 SERVER_ADDRESS = '127.0.0.1'
 SERVER_PORT = 22224
 
-def ricevi_comandi(sock_service, addr_client):
+def ricevi_comandi(sock_service,addr_client):
     print("avviato")
     while True:
-            data=cs.recv(1024)
-            if not data:
-                break
-            data=data.decode()
-            data=json.loads(data)
-            primoNumero=data['primoNumero']
-            operazione=data['operazione']
-            secondoNumero=data['secondoNumero']
-            ris=""
-            if operazione=="+":
-                ris=primoNumero+secondoNumero
-            elif operazione=="-":
-                ris=primoNumero-secondoNumero
-            elif operazione=="*":
-                ris=primoNumero*secondoNumero
-            elif operazione=="/":
-                if secondoNumero==0:
-                    ris="Non puoi dividere per 0"
-                else:
-                    ris=primoNumero/secondoNumero
-            elif operazione=="%":
-                ris=primoNumero%secondoNumero
+        data=sock_service.recv(1024)
+        if not data:
+            break
+        data=data.decode()
+        data=json.loads(data)
+        primoNumero=data['primoNumero']
+        operazione=data['operazione']
+        secondoNumero=data['secondoNumero']
+        print(primoNumero)
+        print(secondoNumero)
+        ris=""
+        print(operazione)
+        if operazione=="+":
+            ris=primoNumero+secondoNumero
+        elif operazione=="-":
+            ris=primoNumero-secondoNumero
+        elif operazione=="*":
+            ris=primoNumero*secondoNumero
+        elif operazione=="/":
+            if secondoNumero==0:
+                ris="Non puoi dividere per 0"
             else:
-                ris="Operazione non riconosciuta"
-            ris=str(ris)
-            cs.sendall(ris.encode("UTF-8"))
-            
-            sock_service.close()
+                ris=primoNumero/secondoNumero
+        elif operazione=="%":
+            ris=primoNumero%secondoNumero
+        else:
+            ris="Operazione non riconosciuta"
+        ris=str(ris)
+        print(ris)
+        sock_service.sendall(ris.encode("UTF-8"))
+    sock_service.close()
 
 
 
@@ -54,9 +57,9 @@ def ricevi_connessioni(sock_listen):
 def avvia_server(indirizzo, porta):
     sock_listen = socket.socket()
     sock_listen.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock_listen.bind((SERVER_ADDRESS, SERVER_PORT))
+    sock_listen.bind((indirizzo, porta))
     sock_listen.listen(5)
-    print("Server in ascolto su %s." % str((SERVER_ADDRESS, SERVER_PORT)))
+    print("Server in ascolto su %s." % str((indirizzo, porta)))
     ricevi_connessioni(sock_listen)
 
 if __name__=='__main__':
