@@ -1,5 +1,7 @@
 import socket
-from threading import Thread
+import json 
+from threading import Thread 
+
 SERVER_ADDRESS='127.0.0.1'
 SERVER_PORT=22225
 class Client():
@@ -27,9 +29,11 @@ class Client():
                 print("Chiudo la connessione con il server!")
                 sock_service.close()
                 break
-
-            dati=dati.encode()
-            sock_service.sendall(dati)
+            messaggio={'primoNumero':n1,
+            'operazione':oper,
+            'secondoNumero':n2}
+            messaggio=json.dumps(messaggio)
+            sock_service.sendall(messaggio.encode("UTF-8"))
             dati=sock_service.recv(2048)
             if not dati:
                 print("Server non risponde. Exit")

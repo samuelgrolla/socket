@@ -1,5 +1,6 @@
 import socket
 from threading import Thread
+import json
 SERVER_ADDRESS='127.0.0.1'
 SERVER_PORT=22225
 class Server():
@@ -9,7 +10,7 @@ class Server():
     
     def avvia_server(self):
         sock_listen=socket.socket()
-        sock_listen.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADOR, 1)
+        sock_listen.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock_listen.bind((self.address, self.port))
         sock_listen.listen(5)
         print("Server in ascolto su %s." % str((self.address, self.port)))
@@ -29,29 +30,36 @@ class Server():
     def ricevi_comandi(self,sock_service,addr_client):
         print("avviato")
         while True:
-            dati=sock_service.recv(2048)
-            if not dati:
-                print("Fine dati dal client. Reset")
+            data=sock_service.recv(1024)
+            if not data:
                 break
-            dati=dati.decode()
-            print("Ricevuto: '%s'" % dati)
-            if dati=='0':
-                print("Chiudo la connessione con " + str(addr_client))
-                break
-            risultato=0
-            oper,n1,n2=dati.split(";")
-            if oper=="piu":
-                risultato=int(n1)+int(n2)
-            if oper=="meno":
-                risultato=int(n1)-int(n2)
-            if oper=="per":
-                risultato=int(n1)*int(n2)
-            if oper=="diviso":
-                risultato=int(n1)/int(n2)
-            
-            dati=f"Risposta a : {str(addr_client)}. Il risultato dell'operazione( {n1} {oper} {n2}) è :{risultato}"
-            dati=dati.encode()
-            sock_service.send(dati)
+            data=data.decode()
+            data=json.loads(data)
+            primoNumero=data['primoNumero']
+            operazione=data['operazione']
+            secondoNumero=data['secondoNumero']
+            print(primoNumero)
+            print(secondoNumero)
+            ris=""
+            print(operazione)
+            if operazione=="+":
+                ris=primoNumero+secondoNumero
+            elif operazione=="-":
+                ris=primoNumero-secondoNumero
+            elif operazione=="*":
+                ris=primoNumero*secondoNumero
+            elif operazione=="/":
+                if secondoNumero==0:
+                    ris="Non puoi dividere per 0"
+                else:
+                    ris=primoNumero/secondoNumero
+            elif operazione=="%":
+                ris=primoNumero%secondoNumero
+            else:
+                ris="Operazione non riconosciuta"
+            ris=str(ris)
+            print(ris)
+            sock_service.sendall(ris.encode("UTF-8"))
         sock_service.close()
 
 s1=Server(SERVER_ADDRESS,SERVER_PORT)
